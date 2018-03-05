@@ -23,6 +23,18 @@ public class UISyncTransaction<BOValue, UIValue> implements BOCapable {
 		connectBO(boGetter, boSetter);
 		connectUI(uiGetter, uiSetter);
 	}
+	
+	public void setHinweg(Supplier<BOValue> boGetter, Consumer<UIValue> uiSetter, Function<BOValue, UIValue> boUiTransformer) {
+		this.boGetter = Objects.requireNonNull(boGetter);
+		this.uiSetter = Objects.requireNonNull(uiSetter);
+		abTransformer = Objects.requireNonNull(boUiTransformer);
+	}
+
+	public void setRueckweg(Supplier<UIValue> uiGetter, Consumer<BOValue> boSetter, Function<UIValue, BOValue> uiBoTransformer) {
+		this.uiGetter = Objects.requireNonNull(uiGetter);
+		this.boSetter = Objects.requireNonNull(boSetter);
+		baTransformer = Objects.requireNonNull(uiBoTransformer);
+	}
 
 	private void connectUI(Supplier<UIValue> bGetter, Consumer<UIValue> bSetter) {
 		this.uiGetter = Objects.requireNonNull(bGetter);
