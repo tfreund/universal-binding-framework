@@ -8,7 +8,6 @@ import java.util.function.Supplier;
 
 public class Syncer<E> implements BOCapable<E> {
 	private List<SyncTransaction<E, ?, ?>> syncTransactions = new Vector<>();
-	private List<Consumer<Syncer<E>>> listeners = new ArrayList<Consumer<Syncer<E>>>();
 
 	public void setObject(E object) {
 		this.setObject(() -> object);
@@ -30,9 +29,8 @@ public class Syncer<E> implements BOCapable<E> {
 			success |= syncTransaction.writeUiToBO();
 		}
 		if (success == false) {
-			syncTransactions.forEach((st) -> st.restoreBOValue());
+			restoreBOValue();
 		}
-		this.listeners.forEach((listener) -> listener.accept(this));
 		return true;
 	}
 
@@ -40,13 +38,8 @@ public class Syncer<E> implements BOCapable<E> {
 		this.syncTransactions.add(syncTransaction);
 	}
 
-	public void addListener(Consumer<Syncer<E>> listener) {
-		this.listeners.add(listener);
-	}
-
 	@Override
 	public void restoreBOValue() {
-		// TODO Auto-generated method stub
-
+		syncTransactions.forEach((st) -> st.restoreBOValue());
 	}
 }
