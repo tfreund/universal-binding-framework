@@ -4,7 +4,7 @@ import javax.swing.JLabel;
 import javax.swing.JTextField;
 
 import de.freund.syncer.Syncer;
-import de.freund.syncer.transformer.DateTransformer;
+import de.freund.syncer.transformer.DateToStringTransformer;
 import de.freund.syncer.SyncTransaction;
 
 public class Tester {
@@ -22,9 +22,9 @@ public class Tester {
 
 		Syncer<Person> syncer = new Syncer<Person>();
 
-		DateTransformer dt = new DateTransformer();
+		DateToStringTransformer dt = new DateToStringTransformer();
 
-		SyncTransaction syncTransaction = new SyncTransaction<Person, Date, String>(Person::getBirthday, Person::setBirthday, tf::getText, tf::setText,
+		SyncTransaction<Person, Date, String> syncTransaction = new SyncTransaction<Person, Date, String>(Person::getBirthday, Person::setBirthday, tf::getText, tf::setText,
 				dt::dateToString, dt::stringToDate, (e) -> errorLabel.setText(e.getMessage()));
 
 		syncer.addSyncTransaction(syncTransaction);

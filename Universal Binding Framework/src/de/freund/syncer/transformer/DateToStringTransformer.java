@@ -3,7 +3,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class DateTransformer {
+public class DateToStringTransformer {
 	SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.yyyy");
 
 	public String dateToString(Date date) {
