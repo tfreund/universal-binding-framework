@@ -1,21 +1,23 @@
 package de.freund.syncer;
 
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
-public class UISyncTransaction<BOValue, UIValue> implements BOCapable {
-	private Supplier<BOValue> boGetter;
-	private Consumer<BOValue> boSetter;
+public class SyncTransaction<BO, BOValue, UIValue> implements BOCapable<BO> {
+	private Function<BO, BOValue> boGetter;
+	private BiConsumer<BO, BOValue> boSetter;
 	private Supplier<UIValue> uiGetter;
 	private Consumer<UIValue> uiSetter;
 	private Function<BOValue, UIValue> abTransformer;
 	private Function<UIValue, BOValue> baTransformer;
 	private BOValue oldBoValue;
 	private Consumer<Exception> errorHandler;
+	private Supplier<BO> objectStrategy;
 
-	public UISyncTransaction(Supplier<BOValue> boGetter, Consumer<BOValue> boSetter, Supplier<UIValue> uiGetter, Consumer<UIValue> uiSetter,
+	public SyncTransaction(Function<BO, BOValue> boGetter, BiConsumer<BO, BOValue> boSetter, Supplier<UIValue> uiGetter, Consumer<UIValue> uiSetter,
 			Function<BOValue, UIValue> boUiTransformer, Function<UIValue, BOValue> uiBoTransformer, Consumer<Exception> errorHandler) {
 		this.errorHandler = errorHandler;
 		this.abTransformer = boUiTransformer;
@@ -23,14 +25,14 @@ public class UISyncTransaction<BOValue, UIValue> implements BOCapable {
 		connectBO(boGetter, boSetter);
 		connectUI(uiGetter, uiSetter);
 	}
-	
-	public void setHinweg(Supplier<BOValue> boGetter, Consumer<UIValue> uiSetter, Function<BOValue, UIValue> boUiTransformer) {
+
+	public void setHinweg(Function<BO, BOValue> boGetter, Consumer<UIValue> uiSetter, Function<BOValue, UIValue> boUiTransformer) {
 		this.boGetter = Objects.requireNonNull(boGetter);
 		this.uiSetter = Objects.requireNonNull(uiSetter);
 		abTransformer = Objects.requireNonNull(boUiTransformer);
 	}
 
-	public void setRueckweg(Supplier<UIValue> uiGetter, Consumer<BOValue> boSetter, Function<UIValue, BOValue> uiBoTransformer) {
+	public void setRueckweg(Supplier<UIValue> uiGetter, BiConsumer<BO, BOValue> boSetter, Function<UIValue, BOValue> uiBoTransformer) {
 		this.uiGetter = Objects.requireNonNull(uiGetter);
 		this.boSetter = Objects.requireNonNull(boSetter);
 		baTransformer = Objects.requireNonNull(uiBoTransformer);
@@ -41,14 +43,14 @@ public class UISyncTransaction<BOValue, UIValue> implements BOCapable {
 		this.uiSetter = Objects.requireNonNull(bSetter);
 	}
 
-	private void connectBO(Supplier<BOValue> boGetter, Consumer<BOValue> boSetter) {
+	private void connectBO(Function<BO, BOValue> boGetter, BiConsumer<BO, BOValue> boSetter) {
 		this.boGetter = Objects.requireNonNull(boGetter);
 		this.boSetter = Objects.requireNonNull(boSetter);
 	}
 
 	@Override
 	public boolean loadUiFromBO() {
-		BOValue boValue = boGetter.get();
+		BOValue boValue = boGetter.apply(objectStrategy.get());
 		UIValue newBValue = abTransformer.apply(boValue);
 		uiSetter.accept(newBValue);
 		return true;
@@ -57,10 +59,10 @@ public class UISyncTransaction<BOValue, UIValue> implements BOCapable {
 	@Override
 	public boolean writeUiToBO() {
 		try {
-			oldBoValue = boGetter.get();
+			oldBoValue = boGetter.apply(objectStrategy.get());
 			UIValue uiValue = uiGetter.get();
 			BOValue newAValue = baTransformer.apply(uiValue);
-			boSetter.accept(newAValue);
+			boSetter.accept(objectStrategy.get(), newAValue);
 			errorHandler.accept(null);
 			return true;
 		} catch (Exception e) {
@@ -73,6 +75,11 @@ public class UISyncTransaction<BOValue, UIValue> implements BOCapable {
 
 	@Override
 	public void restoreBOValue() {
-		boSetter.accept(oldBoValue);
+		boSetter.accept(objectStrategy.get(), oldBoValue);
+	}
+
+	@Override
+	public void setObject(Supplier<BO> objectStrategy) {
+		this.objectStrategy = objectStrategy;
 	}
 }

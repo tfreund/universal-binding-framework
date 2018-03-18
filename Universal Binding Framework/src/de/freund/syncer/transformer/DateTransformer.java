@@ -1,3 +1,4 @@
+package de.freund.syncer.transformer;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -9,7 +10,11 @@ public class DateTransformer {
 		return simpleDateFormat.format(date);
 	}
 
-	public Date stringToDae(String dateString) throws ParseException {
-		return simpleDateFormat.parse(dateString);
+	public Date stringToDate(String dateString) {
+		try {
+			return simpleDateFormat.parse(dateString);
+		} catch (ParseException e) {
+			throw new RuntimeException(e);
+		}
 	}
 }

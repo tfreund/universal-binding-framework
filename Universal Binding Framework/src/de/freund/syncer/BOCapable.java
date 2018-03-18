@@ -1,6 +1,9 @@
 package de.freund.syncer;
 
-public interface BOCapable {
+import java.util.function.Supplier;
+
+public interface BOCapable<E> {
+	public void setObject(Supplier<E> object);
 	public boolean loadUiFromBO();
 	public boolean writeUiToBO();
 	void restoreBOValue();

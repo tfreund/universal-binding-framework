@@ -3,9 +3,9 @@ import java.util.Date;
 import javax.swing.JLabel;
 import javax.swing.JTextField;
 
-import de.freund.syncer.BOCapable;
 import de.freund.syncer.Syncer;
-import de.freund.syncer.UISyncTransaction;
+import de.freund.syncer.transformer.DateTransformer;
+import de.freund.syncer.SyncTransaction;
 
 public class Tester {
 
@@ -20,24 +20,24 @@ public class Tester {
 		tf = new JTextField();
 		errorLabel = new JLabel();
 
-		Syncer<Person> syncer = new Syncer<Person>(Tester::bindValues);
+		Syncer<Person> syncer = new Syncer<Person>();
+
+		DateTransformer dt = new DateTransformer();
+
+		SyncTransaction syncTransaction = new SyncTransaction<Person, Date, String>(Person::getBirthday, Person::setBirthday, tf::getText, tf::setText,
+				dt::dateToString, dt::stringToDate, (e) -> errorLabel.setText(e.getMessage()));
+
+		syncer.addSyncTransaction(syncTransaction);
+
 		syncer.setObject(person);
 
 		System.out.println(tf.getText());
 		
-		tf.setText("failure");
+		tf.setText("01.02.2003");
 		
 		syncer.writeUiToBO();
 		System.out.println("Label: " + errorLabel.getText());
 	}
 
-	public static void bindValues(Syncer<Person> syncer) throws Exception {
-		DateTransformer dt = new DateTransformer();
-
-		BOCapable syncTransaction = new UISyncTransaction<Date, String>(syncer.getObject()::getBirthday, syncer.getObject()::setBirthday, tf::getText, tf::setText,
-				dt::dateToString, dt::stringToDate, (e) -> errorLabel.setText(e.getMessage()));
-
-		syncer.addSyncTransaction(syncTransaction);
-	}
 
 }
